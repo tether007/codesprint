@@ -5,10 +5,9 @@ export default function Home() {
     <>
       <div className="flex min-h-screen items-center justify-center">
           <Card>
-            <h1>this is the heading</h1><br />
-            <p>
-              i want to talk abt the challenge
-            </p>
+            <div>
+              <h1>justify</h1>
+            </div>
 
           </Card>
 
