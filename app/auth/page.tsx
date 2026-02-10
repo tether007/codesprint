@@ -1,9 +1,12 @@
-import CloudWatch from '@/components/formui/CloudWatch';
+"use client";
+
+import { useState } from "react";
+import CloudWatchForm from "@/components/formui/CloudWatch";
 
 export default function AuthPage() {
-  return (
-    <div className="min-h-screen">
-      <CloudWatch />
-    </div>
-  );
+
+  //to swap login n signup
+  const [mode, setMode] = useState<"login" | "signup">("signup");
+
+  return <CloudWatchForm mode={mode} onModeChange={setMode} />;
 }

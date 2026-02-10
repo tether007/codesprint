@@ -1,29 +1,56 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export default function CloudWatchForm() {
+export default function CloudWatchForm({
+  mode,
+  onModeChange,
+} : {
+   mode: "login" | "signup";
+   onModeChange: (m: "login" | "signup") => void;
+}) {
   const [isTyping, setIsTyping] = useState(false);
-  const [cursor, setCursor] = useState({ x: 0, y: 0 });
+  const cursorRef = React.useRef({ x: 0, y: 0 });
+  const rafRef = React.useRef<number | null>(null);
   const [eyePos, setEyePos] = useState({ x: 0, y: 0 });
   const [blink, setBlink] = useState(false);
 
-  useEffect(() => {
-    const handleMouse = (e: MouseEvent) => setCursor({ x: e.clientX, y: e.clientY });
-    window.addEventListener("mousemove", handleMouse);
-    return () => window.removeEventListener("mousemove", handleMouse);
-  }, []);
+  //form states 
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
 
   useEffect(() => {
-    const offsetX = ((cursor.x / window.innerWidth) - 0.5) * 40; // bigger range
-    const offsetY = ((cursor.y / window.innerHeight) - 0.5) * 20;
-    setEyePos({ x: offsetX, y: offsetY });
-  }, [cursor]);
+  const handleMouse = (e: MouseEvent) => {
+    cursorRef.current = { x: e.clientX, y: e.clientY };
 
-  // Blinking every 3 seconds
+    if (rafRef.current === null) {
+      rafRef.current = requestAnimationFrame(() => {
+        const { x, y } = cursorRef.current;
+
+        const offsetX = ((x / window.innerWidth) - 0.5) * 40;
+        const offsetY = ((y / window.innerHeight) - 0.5) * 20;
+
+        setEyePos({ x: offsetX, y: offsetY });
+        rafRef.current = null;
+      });
+    }
+  };
+
+  window.addEventListener("mousemove", handleMouse);
+  return () => {
+    window.removeEventListener("mousemove", handleMouse);
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+  };
+}, []);
+
+
   useEffect(() => {
     const interval = setInterval(() => {
       setBlink(true);
@@ -32,11 +59,43 @@ export default function CloudWatchForm() {
     return () => clearInterval(interval);
   }, []);
 
+
+    //server side code
+    async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+
+    const endpoint =
+      mode === "signup" ? "/api/auth/signup" : "/api/auth/login";
+
+    const payload =
+      mode === "signup"
+        ? { name, email, password }
+        : { email, password };
+
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.error || "Authentication failed");
+      setLoading(false);
+      return;
+    }
+
+    window.location.href = "/dashboard";
+  }
+
+
   return (
     <div className="flex items-center justify-center min-h-screen p-4">
       <div className="bg-zinc-900 backdrop-blur-md rounded-xl shadow-xl shadow-red-500/50 p-8 flex flex-col items-center gap-6 w-md border border-zinc-800">
         
-        {/* Cartoon Face */}
+        {/* Robot face */}
           <div className="relative w-70 h-40">
             <div className="absolute top-5 left-1/2 transform -translate-x-1/2 w-60 h-30 bg-gradient-to-b from-gray-300 to-gray-400 rounded-2xl border-4 border-red-500 flex justify-center items-center shadow-lg" style={{boxShadow: "inset 0 2px 8px rgba(0,0,0,0.2), 0 4px 12px rgba(239,68,68,0.3)"}}>
               {/* Screen/Display */}
@@ -55,12 +114,12 @@ export default function CloudWatchForm() {
                   left: idx === 0 ? 80 : 150,
                   width: 28,
                   height: isTyping
-                    ? 4 // fully closed when typing password
+                    ? 4 
                     : blink
-                    ? 6 // temporary blink
-                    : 35, // open eye
+                    ? 6 
+                    : 35, 
                   borderRadius: isTyping || blink ? "2px" : "50% / 60%",
-                  backgroundColor: isTyping ? "black" : "white", // black line when typing
+                  backgroundColor: isTyping ? "black" : "white",
                   transition: "all 0.15s ease",
                 }}
               >
@@ -82,14 +141,28 @@ export default function CloudWatchForm() {
           </div>
 
         {/* Form */}
-        <div className="w-full flex flex-col gap-3 px-4">
+        <form onSubmit={handleSubmit}
+          className="w-full flex flex-col gap-3 px-4">
+          
+          {mode === "signup" && (
           <div className="flex flex-col">
-            <Label className="mb-1 text-base">Name</Label>
-            <Input placeholder="Your Name" />
+            <Label>Name</Label>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
           </div>
+        )}
+
           <div className="flex flex-col">
             <Label className="mb-1 text-base">Email</Label>
-            <Input type="email" placeholder="Your Email" />
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
           </div>
           {/* <div className="flex flex-col">
             <Label>Username</Label>
@@ -98,15 +171,43 @@ export default function CloudWatchForm() {
           {/* username not req (not in schema) */}
           <div className="flex flex-col">
             <Label className="mb-1 text-base">Password</Label>
-            <Input
+             <Input
               type="password"
-              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               onFocus={() => setIsTyping(true)}
               onBlur={() => setIsTyping(false)}
-            />
+              required
+            />  
           </div>
-          <Button className="mt-2 w-full bg-red-600 hover:bg-red-700 text-white">Submit</Button>
+          <Button type="submit" className="mt-2 w-full bg-red-600 hover:bg-red-700 text-white">{loading ? "Signing up..." : "Submit"}</Button>
+          <div className="text-sm text-center text-zinc-400">
+          {mode === "signup" ? (
+            <>
+              Already started capturing???{" "}
+              <button
+                type="button"
+                className="text-red-400 hover:underline"
+                onClick={() => onModeChange("login")}
+              >
+                Login
+              </button>
+            </>
+          ) : (
+            <>
+              Newly Capturing flags???{" "}
+              <button
+                type="button"
+                className="text-red-400 hover:underline"
+                onClick={() => onModeChange("signup")}
+              >
+                Sign up
+              </button>
+            </>
+          )}
         </div>
+
+        </form>
       </div>
     </div>
   );
