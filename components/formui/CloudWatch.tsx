@@ -89,10 +89,11 @@ export default function CloudWatchForm() {
             <Label>Email</Label>
             <Input type="email" placeholder="Your Email" />
           </div>
-          <div className="flex flex-col">
+          {/* <div className="flex flex-col">
             <Label>Username</Label>
             <Input placeholder="Username" />
-          </div>
+          </div> */}  
+          {/* username not req (not in schema) */}
           <div className="flex flex-col">
             <Label>Password</Label>
             <Input
