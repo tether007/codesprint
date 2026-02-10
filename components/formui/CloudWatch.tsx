@@ -34,7 +34,7 @@ export default function CloudWatchForm() {
 
   return (
     <div className="flex items-center justify-center min-h-screen p-4">
-      <div className="bg-black backdrop-blur-md rounded-xl shadow-xl shadow-red-500/50 p-8 flex flex-col items-center gap-6 w-md border">
+      <div className="bg-zinc-900 backdrop-blur-md rounded-xl shadow-xl shadow-red-500/50 p-8 flex flex-col items-center gap-6 w-md border border-zinc-800">
         
         {/* Cartoon Face */}
           <div className="relative w-70 h-40">
