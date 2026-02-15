@@ -86,8 +86,7 @@ export default function CloudWatchForm({
       setLoading(false);
       return;
     }
-
-    window.location.href = "/dashboard";
+    window.location.href = "/team-setup";
   }
 
 
@@ -100,8 +99,7 @@ export default function CloudWatchForm({
             <div className="absolute top-5 left-1/2 transform -translate-x-1/2 w-60 h-30 bg-gradient-to-b from-gray-300 to-gray-400 rounded-2xl border-4 border-red-500 flex justify-center items-center shadow-lg" style={{boxShadow: "inset 0 2px 8px rgba(0,0,0,0.2), 0 4px 12px rgba(239,68,68,0.3)"}}>
               {/* Screen/Display */}
               <div className="absolute top-4 left-1/2 transform -translate-x-1/2 w-48 h-16 bg-gradient-to-br from-blue-900 to-blue-950 rounded-xl border-2 border-blue-800 flex flex-col items-center justify-center" style={{boxShadow: "inset 0 0 8px rgba(0,0,0,0.8)"}}/>
-              
-              {/* Power indicator light */}
+
               <div className="absolute bottom-3 left-4 w-3 h-3 bg-red-500 rounded-full animate-pulse" style={{boxShadow: "0 0 8px rgb(239,68,68)"}}></div>
             </div>
 
@@ -130,7 +128,7 @@ export default function CloudWatchForm({
                       width: 16,
                       height: 16,
                       borderRadius: "50%",
-                      marginBottom: 6, // pupil at bottom
+                      marginBottom: 6, 
                       transform: `translate(${eyePos.x}px, 0px)`,
                       transition: "all 0.1s ease",
                     }}

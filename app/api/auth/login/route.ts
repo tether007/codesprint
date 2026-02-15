@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
-import { createToken, setAuthCookie } from '@/lib/auth';
+import { createToken } from '@/lib/auth';
 import { loginSchema } from '@/lib/validators';
-
 
 export async function POST(request: NextRequest) {
   try {
-
-    // Validate input
     const body = await request.json();
     const validation = loginSchema.safeParse(body);
 
@@ -21,7 +18,6 @@ export async function POST(request: NextRequest) {
 
     const { email, password } = validation.data;
 
-    // Find user
     const user = await prisma.user.findUnique({
       where: { email },
     });
@@ -33,7 +29,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify password
     const isValidPassword = await bcrypt.compare(password, user.passwordHash);
 
     if (!isValidPassword) {
@@ -43,11 +38,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    //jWT
     const token = await createToken(user.id);
-    setAuthCookie(token);
     
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       user: {
         id: user.id,
@@ -55,6 +48,18 @@ export async function POST(request: NextRequest) {
         name: user.name,
       },
     });
+
+    response.cookies.set({
+      name: "token",
+      value: token,
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7, 
+      path: "/",
+    });
+
+    return response;
 
   } catch (error) {
     console.error('Login error:', error);

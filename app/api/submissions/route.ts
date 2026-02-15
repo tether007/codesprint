@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-// import { prisma } from "@/lib/prisma"; // Uncomment when DB is available
+import { prisma } from "@/lib/prisma"; // Uncomment when DB is available
 import { verifyToken } from "@/lib/auth";
 import { cookies } from "next/headers";
 
