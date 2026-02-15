@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
-import AnimatedBackground from "@/components/AnimatedBackground";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,19 +29,6 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-
-        {/* background (temp change if req) */}
-        <AnimatedBackground/>
-        
-        {/* navbar (temp change if req)*/}
-        <div>
-            <Link href = ""></Link>
-            <Link href = ""></Link>
-            <Link href = ""></Link>
-            <Link href = ""></Link>
-
-        </div>
-
         {children}
       </body>
     </html>
