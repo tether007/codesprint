@@ -1,6 +1,4 @@
-//intro(/) -> introSolved(T?F) Cookie 
-//auth(/auth) -> token
-//team-setup(/team-setup) -> verifies the token
+
 "use client";
 import { useState, useEffect, CSSProperties } from 'react'; // Added useState, useEffect
 import { motion } from 'framer-motion';
@@ -15,7 +13,7 @@ export default function Hero() {
   }, []);
   
   const handleJoinClick = () => {
-    router.push('/intro'); 
+    router.push('/auth'); 
   };
 
   const containerStyle: CSSProperties = {
