@@ -1,167 +1,171 @@
+//intro(/) -> introSolved(T?F) Cookie 
+//auth(/auth) -> token
+//team-setup(/team-setup) -> verifies the token
 "use client";
+import { useState, useEffect, CSSProperties } from 'react'; // Added useState, useEffect
+import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 
-import { useRef, useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
-
-export default function Intro() {
-  const [input, setInput] = useState("");
-  const [error, setError] = useState("");
-  const konamiRef = useRef<string[]>([]);
+export default function Hero() {
   const router = useRouter();
-
-  const correctSequence = [
-    "ArrowUp",
-    "ArrowUp",
-    "ArrowDown",
-    "ArrowDown",
-    "ArrowLeft",
-    "ArrowRight",
-    "B",
-    "A",
-  ];
-
-  const handleSuccess = () => {
-  document.cookie = "introSolved=true; path=/; max-age=84600"; 
-  router.push("/auth");
-};
-
-  const handleKonamiCode = useCallback((e: KeyboardEvent) => {
-    const key = e.key.length === 1 ? e.key.toUpperCase() : e.key;
-
-    const allowed = [
-      "ArrowUp",
-      "ArrowDown",
-      "ArrowLeft",
-      "ArrowRight",
-      "B",
-      "A",
-    ];
-
-    if (!allowed.includes(key)) return;
-
-    konamiRef.current.push(key);
-
-    if (konamiRef.current.length > correctSequence.length) {
-      konamiRef.current.shift();
-    }
-
-    const matched =
-      konamiRef.current.length === correctSequence.length &&
-      correctSequence.every((val, i) => val === konamiRef.current[i]);
-
-    if (matched) {
-      konamiRef.current = [];
-      handleSuccess();
-    }
-  }, []);
+  const [hasMounted, setHasMounted] = useState(false); // New state to handle hydration
 
   useEffect(() => {
-    window.addEventListener("keydown", handleKonamiCode);
-    return () => window.removeEventListener("keydown", handleKonamiCode);
-  }, [handleKonamiCode]);
-
-  const handleInputSubmit = () => {
-    const normalized = input.toLowerCase().trim();
-
-    const validAnswers = [
-      "up up down down left right left right b a",
-      "konami",
-      "konami code",
-    ];
-
-    if (validAnswers.some((ans) => normalized.includes(ans))) {
-      handleSuccess();
-    } else {
-      setError("INVALID ACCESS CODE. TRY AGAIN.");
-      setInput("");
-      konamiRef.current = [];
-
-      const modal = document.getElementById("spy-modal");
-      modal?.classList.add("animate-shake");
-      setTimeout(() => modal?.classList.remove("animate-shake"), 500);
-    }
+    setHasMounted(true); // Triggers once the component is on the client
+  }, []);
+  
+  const handleJoinClick = () => {
+    router.push('/intro'); 
   };
 
+  const containerStyle: CSSProperties = {
+    backgroundColor: '#000',
+    height: '100vh',
+    width: '100vw',
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column', 
+    alignItems: 'center',
+    justifyContent: 'center',
+    perspective: '1000px',
+    position: 'relative',
+  };
+
+  const textStyle: CSSProperties = {
+    fontSize: 'clamp(5rem, 18vw, 12rem)',
+    fontWeight: '900',
+    color: '#ff0000',
+    fontFamily: '"Impact", "Archivo Black", sans-serif',
+    lineHeight: '0.8',
+    textAlign: 'center',
+    textTransform: 'uppercase',
+    letterSpacing: '-0.02em',
+    transform: 'rotateX(20deg) rotateZ(-5deg) skewX(-10deg)',
+    filter: 'drop-shadow(0 0 30px rgba(255, 0, 0, 0.7))',
+    position: 'relative',
+    zIndex: 10,
+    marginTop: '-15vh', 
+  } as any;
+
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <div
-        id="spy-modal"
-        className="relative w-full max-w-md rounded-xl border border-red-500/30 bg-zinc-950/95 p-6 shadow-xl"
-        style={{
-          boxShadow:
-            "0 0 40px rgba(239,68,68,0.35), inset 0 0 25px rgba(0,0,0,0.5)",
-        }}
-      >
-        <div className="absolute inset-0 rounded-xl pointer-events-none overflow-hidden">
-          <div className="absolute inset-[-2px] rounded-xl bg-gradient-to-r from-red-600 via-rose-500 to-red-600 opacity-30 animate-pulse" />
-          <div className="absolute inset-[2px] rounded-xl bg-zinc-950/95" />
-        </div>
-
-        {/* Scanline */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl">
-          <div className="absolute inset-x-0 h-1 bg-gradient-to-b from-transparent via-red-500/30 to-transparent animate-[scan_4s_linear_infinite]" />
-        </div>
-
-        <div className="relative z-10 space-y-5 text-center">
-          <div className="inline-block border border-red-500 px-5 py-2 rounded-full bg-black/80">
-            <span className="text-xs font-mono tracking-widest text-red-500 font-bold">
-              ■ CLASSIFIED ■
-            </span>
-          </div>
-
-          <h2 className="text-2xl font-bold text-white">
-            SECURITY CLEARANCE
-          </h2>
-
-          <div className="bg-black/40 border border-red-500/20 rounded-lg p-4 text-gray-300 italic text-sm leading-relaxed">
-          <div className="text-red-400/80 font-semibold not-italic text-xs uppercase tracking-wider mb-2">
-            Quote by the Devs
-          </div>
-          "Climb the heavens twice, bow twice to the earth,
-          sway west and east in balance,
-          and seal it with B and A."
-          </div>
-
-          <div className="bg-black/40 border border-red-500/20 rounded-lg p-4 text-gray-300 italic text-sm leading-relaxed">
-          <div className="text-red-400/80 font-semibold not-italic text-xs uppercase tracking-wider mb-2">
-            HINT
-          </div>
-              To get an hint you need to do , what <strong><u>detectives</u> </strong> do. 
-              <span hidden>Use you arrow keys and decode the quote</span>
-          </div>
-
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => {
-              setInput(e.target.value);
-              setError("");
+    <div style={containerStyle}>
+      {/* BACKGROUND: Horizontal Red Glitch Streams */}
+      <div style={{ position: 'absolute', inset: 0, zIndex: 1, overflow: 'hidden' }}>
+        {/* Only render random particles after mounting to prevent Hydration Mismatch */}
+        {hasMounted && [...Array(15)].map((_, i) => (
+          <motion.div
+            key={i}
+            initial={{ x: '-100vw', opacity: 0 }}
+            animate={{ 
+              x: '100vw', 
+              opacity: [0, 0.6, 0] 
             }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleInputSubmit();
+            transition={{ 
+              duration: Math.random() + 8, 
+              repeat: Infinity, 
+              ease: "linear",
+              delay: Math.random()  
             }}
-            placeholder="Enter access code..."
-            className="w-full rounded-lg bg-black/60 border border-red-500/40 px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-red-500 font-mono"
+            style={{
+              position: 'absolute',
+              top: `${Math.random() * 100}%`,
+              width: `${Math.random() * 300 + 100}px`, 
+              height: '1px',
+              background: 'linear-gradient(90deg, transparent, #ff0000, #fff, transparent)',
+              filter: 'blur(1px)',
+            } as any}
           />
+        ))}
 
-          {error && (
-            <p className="text-red-500 font-mono text-sm">
-              ⚠ {error}
-            </p>
-          )}
-
-          <button
-            onClick={handleInputSubmit}
-            className="w-full rounded-lg bg-gradient-to-r from-red-600 to-red-700 py-3 font-bold tracking-wide text-white hover:from-red-700 hover:to-red-800 transition"
-          >
-            AUTHENTICATE
-          </button>
-
-          <div className="text-xs text-gray-600 pt-2">
-            GDG NMIT'26
-          </div>
-        </div>
+        <motion.div
+          animate={{ opacity: [0.1, 0.2, 0.1] }}
+          transition={{ duration: 6, repeat: Infinity }}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'radial-gradient(circle at 50% 50%, #200 0%, transparent 80%)',
+            zIndex: -1
+          } as any}
+        />
       </div>
+
+      {/* THE MAIN TEXT */}
+      <motion.div
+        initial={{ scale: 2, opacity: 0, rotateY: 90 }}
+        animate={{ scale: 1, opacity: 1, rotateY: 0 }}
+        transition={{ duration: 1, ease: "easeOut" }}
+        style={{ position: 'relative' }}
+      >
+        <h1 style={textStyle}>
+          CODE<br />
+          <span style={{ color: '#fff', textShadow: '0 0 20px #ff0000' }}>SPRINT</span><span style={{ color: '#888888', textShadow: '0 0 20px #5e0000' }}>4.0</span>
+        </h1>
+        
+        <h1 style={{
+          ...textStyle,
+          position: 'absolute',
+          top: '100%',
+          left: 0,
+          transform: 'rotateX(180deg) rotateZ(-5deg) skewX(-10deg) translateY(20px)',
+          opacity: 0.1,
+          background: 'linear-gradient(to bottom, #ff0000, transparent)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+        } as any}>
+          CODE<br />SPRINT
+        </h1>
+      </motion.div>
+
+      {/* THE CRAZY BUTTON */}
+      <motion.div
+        initial={{ y: 100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.8, duration: 0.5 }}
+        style={{ marginTop: '80px', zIndex: 20 }}
+      >
+        <motion.button
+          onClick={handleJoinClick}
+          whileHover={{ 
+            scale: 1.1, 
+            boxShadow: "0px 0px 40px #ff0000",
+            letterSpacing: "0.2em"
+          }}
+          whileTap={{ scale: 0.95 }}
+          style={{
+            padding: '20px 50px',
+            fontSize: '1.2rem',
+            fontWeight: '900',
+            background: 'transparent',
+            color: '#fff',
+            border: '2px solid #ff0000',
+            textTransform: 'uppercase',
+            cursor: 'pointer',
+            position: 'relative',
+            overflow: 'hidden',
+            clipPath: 'polygon(15% 0, 100% 0, 85% 100%, 0 100%)', 
+          } as any}
+        >
+          <motion.div
+            initial={{ x: '-100%' }}
+            whileHover={{ x: '100%' }}
+            transition={{ repeat: Infinity, duration: 0.6, ease: "linear" }}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'rgba(255, 0, 0, 0.3)',
+              zIndex: -1,
+            }}
+          />
+          GET STARTED
+        </motion.button>
+      </motion.div>
+
+      <div style={{
+        position: 'absolute',
+        inset: 0,
+        boxShadow: 'inset 0 0 200px #000, inset 0 0 100px rgba(255,0,0,0.3)',
+        pointerEvents: 'none'
+      } as any} />
     </div>
   );
 }
