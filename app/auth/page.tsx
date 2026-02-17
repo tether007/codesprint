@@ -1,8 +1,46 @@
 "use client";
 import { useState, useEffect, CSSProperties } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 
 export default function AuthPage() {
+
+
+  const [form, setForm] = useState({
+  name: "",
+  email: "",
+  password: ""
+  });
+  const [error, setError] = useState("");
+  const router = useRouter();
+
+  const handleSubmit = async () => {
+  setError("");
+
+  const endpoint = isLogin
+    ? "/api/auth/login"
+    : "/api/auth/signup";
+
+  const payload = isLogin
+    ? { email: form.email, password: form.password }
+    : form;
+
+  const res = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    setError(data.error || "Something went wrong");
+    return;
+  }
+
+  router.push("/team-setup");
+  };
+
   const [isLogin, setIsLogin] = useState(false);
   const [hasMounted, setHasMounted] = useState(false);
 
@@ -125,10 +163,12 @@ export default function AuthPage() {
             transition={{ duration: 0.3 }}
           >
             {!isLogin && (
-              <motion.input 
-                type="text" 
-                placeholder="[ HANDLE_NAME ]" 
-                style={inputStyle} 
+              <motion.input
+                type="text"
+                placeholder="[ HANDLE_NAME ]"
+                style={inputStyle}
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
                 {...inputAnimate}
               />
             )}
@@ -137,6 +177,8 @@ export default function AuthPage() {
               type="email"
               placeholder="[ EMAIL_NODE ]"
               style={inputStyle}
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
               {...inputAnimate}
             />
 
@@ -144,16 +186,24 @@ export default function AuthPage() {
               type="password"
               placeholder="[ SECURE_KEY ]"
               style={inputStyle}
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
               {...inputAnimate}
             />
             
-            <motion.button 
-              whileHover={{ scale: 1.05, backgroundColor: '#fff', color: '#ff0000' }}
-              whileTap={{ scale: 0.95 }}
-              style={btnStyle}
-            >
-              {isLogin ? 'ACCESS TERMINAL' : 'INITIALIZE REGISTRY'}
-            </motion.button>
+            <motion.button
+            onClick={handleSubmit}
+            whileHover={{ scale: 1.05, backgroundColor: '#fff', color: '#ff0000' }}
+            whileTap={{ scale: 0.95 }}
+            style={btnStyle}
+          >
+            {isLogin ? 'ACCESS TERMINAL' : 'INITIALIZE REGISTRY'}
+          </motion.button>
+          {error && (
+            <div style={{ color: "#ff0000", marginTop: "15px", fontSize: "0.8rem" }}>
+              {error}
+            </div>
+          )}
           </motion.div>
         </AnimatePresence>
 

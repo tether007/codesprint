@@ -27,11 +27,11 @@ async function userHasTeam(token: string): Promise<boolean> {
   }
 }
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const url = req.nextUrl.clone();
   const path = url.pathname;
 
-  // if (path.startsWith("/api/challenges/intro")) return NextResponse.next();
+  if (path.startsWith("/api/challenges/intro")) return NextResponse.next();
   if (path.startsWith("/api/teams/")) return NextResponse.next();
   if (path.startsWith("/api/user/")) return NextResponse.next();
 

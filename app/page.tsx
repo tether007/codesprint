@@ -13,7 +13,7 @@ export default function Hero() {
   }, []);
   
   const handleJoinClick = () => {
-    router.push('/auth'); 
+    router.push('/intro'); 
   };
 
   const containerStyle: CSSProperties = {
