@@ -16,7 +16,31 @@ export default function AuthPage() {
 
   const handleSubmit = async () => {
   setError("");
+  if (!isLogin && !form.name.trim()) {
+    setError("HANDLE_NAME_REQUIRED");
+    return;
+  }
 
+  if (!form.email.trim()) {
+    setError("EMAIL_NODE_REQUIRED");
+    return;
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(form.email)) {
+    setError("INVALID_EMAIL_FORMAT");
+    return;
+  }
+
+  if (!form.password) {
+    setError("SECURE_KEY_REQUIRED");
+    return;
+  }
+
+  if (form.password.length < 8) {
+    setError("SECURE_KEY_TOO_SHORT_MIN_8");
+    return;
+  }
   const endpoint = isLogin
     ? "/api/auth/login"
     : "/api/auth/signup";
@@ -190,7 +214,16 @@ export default function AuthPage() {
               onChange={(e) => setForm({ ...form, password: e.target.value })}
               {...inputAnimate}
             />
-            
+            {!isLogin && (
+            <motion.input
+              type="Team_Name"
+              placeholder="[ TEAM_NAME ]"
+              style={inputStyle}
+              //value={form.teamName}
+              //onChange={(e) => setForm({ ...form, teamName: e.target.value })}
+              {...inputAnimate}
+            />
+            )}
             <motion.button
             onClick={handleSubmit}
             whileHover={{ scale: 1.05, backgroundColor: '#fff', color: '#ff0000' }}
@@ -199,11 +232,48 @@ export default function AuthPage() {
           >
             {isLogin ? 'ACCESS TERMINAL' : 'INITIALIZE REGISTRY'}
           </motion.button>
-          {error && (
-            <div style={{ color: "#ff0000", marginTop: "15px", fontSize: "0.8rem" }}>
+         {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            style={{
+              marginTop: "16px",
+              padding: "14px 16px",
+              border: "1px solid rgba(255, 0, 0, 0.4)",
+              background: "linear-gradient(90deg, rgba(255,0,0,0.08), rgba(255,0,0,0.02))",
+              fontSize: "0.8rem",
+              letterSpacing: "1px",
+              textTransform: "uppercase",
+              color: "#ff4d4d",
+              position: "relative",
+              overflow: "hidden",
+              boxShadow: "0 0 15px rgba(255, 0, 0, 0.15)",
+            }}
+          >
+            <span style={{ fontWeight: 700 }}>⚠ SYSTEM ALERT:</span>
+            <div style={{ marginTop: "6px", opacity: 0.9 }}>
               {error}
             </div>
-          )}
+
+            {/* subtle animated line */}
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: "100%" }}
+              transition={{ repeat: Infinity, duration: 2.5, ease: "linear" }}
+              style={{
+                position: "absolute",
+                bottom: 0,
+                left: 0,
+                height: "2px",
+                width: "100%",
+                background: "linear-gradient(90deg, transparent, #ff0000, transparent)",
+              }}
+            />
+          </motion.div>
+        )}
+
           </motion.div>
         </AnimatePresence>
 

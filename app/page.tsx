@@ -3,6 +3,7 @@
 import { useState, useEffect, CSSProperties } from 'react'; // Added useState, useEffect
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
+import Image from "next/image";
 
 export default function Hero() {
   const router = useRouter();
@@ -89,15 +90,24 @@ export default function Hero() {
 
       {/* THE MAIN TEXT */}
       <motion.div
-        initial={{ scale: 2, opacity: 0, rotateY: 90 }}
-        animate={{ scale: 1, opacity: 1, rotateY: 0 }}
-        transition={{ duration: 1, ease: "easeOut" }}
-        style={{ position: 'relative' }}
+        animate={{ filter: [
+          "drop-shadow(0 0 20px rgba(255,0,0,0.2))",
+          "drop-shadow(0 0 40px rgba(255,0,0,0.7))",
+          "drop-shadow(0 0 20px rgba(255,0,0,0.2))"
+        ]}}
+        transition={{ duration: 3, repeat: Infinity }}
       >
-        <h1 style={textStyle}>
-          CODE<br />
-          <span style={{ color: '#fff', textShadow: '0 0 20px #ff0000' }}>SPRINT</span><span style={{ color: '#888888', textShadow: '0 0 20px #5e0000' }}>4.0</span>
-        </h1>
+        <Image
+        src="/CodeSprint.svg"
+        alt="Code Sprint 4.0"
+        width={800}
+        height={400}
+        style={{
+          width: "clamp(300px, 60vw, 800px)",
+          height: "auto",
+          filter: "drop-shadow(0 0 30px rgba(255,0,0,0.7))",
+        }}
+      />
         
         <h1 style={{
           ...textStyle,
