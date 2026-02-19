@@ -1,69 +1,37 @@
 import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
-type ChallengeData = {
-  id: string;
-  title: string;
-  description: string;
-  instructions: string[];
-  hints: string[];
-  attachments: string[];
-  extra: Record<string, unknown>;
-};
+export async function GET(
+  _req: Request,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { id } = await context.params;
+  const challengeId = Number(id);
 
-type ChallengeEntry = {
-  flag: string;
-  data: ChallengeData;
-};
+  if (!challengeId || isNaN(challengeId)) {
+    return NextResponse.json(
+      { message: "Invalid challenge id" },
+      { status: 400 }
+    );
+  }
 
-const CHALLENGES: Record<string, ChallengeEntry> = {
-  "crypto-1": {
-    flag: "CTF{crypto_flag}",
-    data: {
-      id: "crypto-1",
-      title: "Basic Crypto",
-      description: "Decode the secret message",
-      instructions: ["The cipher is very common"],
-      hints: ["Shift letters"],
-      attachments: [],
-      extra: { difficulty: "easy" },
+  const challenge = await prisma.challenge.findUnique({
+    where: { id: challengeId },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      points: true,
+      createdAt: true,
     },
-  },
-  "web-1": {
-    flag: "CTF{web_flag}",
-    data: {
-      id: "web-1",
-      title: "Hidden Path",
-      description: "Find the hidden flag on the website",
-      instructions: [],
-      hints: ["Check network requests"],
-      attachments: [],
-      extra: {},
-    },
-  },
-  "misc-1": {
-    flag: "CTF{misc_flag}",
-    data: {
-      id: "misc-1",
-      title: "Logic Puzzle",
-      description: "Solve the logic to find the flag",
-      instructions: ["Think step by step"],
-      hints: [],
-      attachments: [],
-      extra: {},
-    },
-  },
-};
+  });
 
-export async function GET(_req: Request, context: any) {
-  const params = await context.params;  
-  const challengeId = params.id as string;
-
-  const challenge = CHALLENGES[challengeId];
-  if (!challenge)
+  if (!challenge) {
     return NextResponse.json(
       { message: "Challenge not found" },
       { status: 404 }
     );
+  }
 
-  return NextResponse.json(challenge.data);
+  return NextResponse.json(challenge);
 }

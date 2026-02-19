@@ -1,9 +1,9 @@
-export default function ChallengePage({
+export default async function ChallengePage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const { id } = params;
+  const { id } = await params;
 
   return (
     <div>

@@ -62,7 +62,7 @@ export default function AuthPage() {
     return;
   }
 
-  router.push("/team-setup");
+  router.push("/dashboard");
   };
 
   const [isLogin, setIsLogin] = useState(false);
