@@ -8,39 +8,15 @@ datasource db {
 }
 
 model User {
-  id            Int            @id @default(autoincrement())
-  email         String         @unique
-  name          String
-  passwordHash  String         @map("password_hash")
-  createdAt     DateTime       @default(now()) @map("created_at")
-  teamMembers   TeamMember[]
-  submissions   Submission[]
+  id           Int          @id @default(autoincrement())
+  email        String       @unique
+  name         String
+  passwordHash String       @map("password_hash")
+  score        Int          @default(0)
+  createdAt    DateTime     @default(now()) @map("created_at")
+  submissions  Submission[]
 
   @@map("users")
-}
-
-//team is seperated 
-model Team {
-  id          Int            @id @default(autoincrement())
-  name        String         @unique
-  teamCode    String         @unique @map("team_code")
-  createdAt   DateTime       @default(now()) @map("created_at")
-  members     TeamMember[]
-  submissions Submission[]
-
-  @@map("teams")
-}
-
-//each team member is seperated too
-model TeamMember {
-  id        Int      @id @default(autoincrement())
-  teamId    Int      @map("team_id")
-  userId    Int      @map("user_id")
-  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([teamId, userId])
-  @@map("team_members")
 }
 
 model Challenge {
@@ -49,22 +25,21 @@ model Challenge {
   description String
   points      Int
   flag        String
+  createdAt   DateTime     @default(now()) @map("created_at")
   submissions Submission[]
 
   @@map("challenges")
 }
 
 model Submission {
-  id           Int      @id @default(autoincrement())
-  teamId       Int      @map("team_id")
-  challengeId  Int      @map("challenge_id")
-  submittedBy  Int      @map("submitted_by")
-  isCorrect    Boolean  @map("is_correct")
-  submittedAt  DateTime @default(now()) @map("submitted_at")
-  team         Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  challenge    Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
-  user         User     @relation(fields: [submittedBy], references: [id], onDelete: Cascade)
+  id          Int       @id @default(autoincrement())
+  userId      Int       @map("user_id")
+  challengeId Int       @map("challenge_id")
+  isCorrect   Boolean   @map("is_correct")
+  submittedAt DateTime  @default(now()) @map("submitted_at")
+  challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([teamId, challengeId])
+  @@unique([userId, challengeId])
   @@map("submissions")
 }

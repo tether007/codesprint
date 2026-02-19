@@ -15,16 +15,6 @@ export const loginSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 });
 
-// Team creation validation
-export const createTeamSchema = z.object({
-  teamName: z.string().min(3, 'Team name must be at least 3 characters').max(50),
-});
-
-// Join team validation
-export const joinTeamSchema = z.object({
-  teamCode: z.string().length(10, 'Invalid team code format'),
-});
-
 // Flag submission validation
 export const submitFlagSchema = z.object({
   challengeId: z.number().int().positive(),

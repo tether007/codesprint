@@ -1,11 +1,36 @@
 import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
-const CHALLENGE_LIST = [
-  { id: "crypto-1", title: "Basic Crypto", difficulty: "easy" },
-  { id: "web-1", title: "Hidden Path", difficulty: "medium" },
-  { id: "misc-1", title: "Logic Puzzle", difficulty: "easy" },
-];
+export async function GET(
+  _req: Request,
+  { params }: { params: { id: string } }
+) {
+  const challengeId = Number(params.id);
 
-export async function GET() {
-  return NextResponse.json(CHALLENGE_LIST);
+  if (isNaN(challengeId)) {
+    return NextResponse.json(
+      { message: "Invalid challenge id" },
+      { status: 400 }
+    );
+  }
+
+  const challenge = await prisma.challenge.findUnique({
+    where: { id: challengeId },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      points: true,
+      createdAt: true,
+    },
+  });
+
+  if (!challenge) {
+    return NextResponse.json(
+      { message: "Challenge not found" },
+      { status: 404 }
+    );
+  }
+
+  return NextResponse.json(challenge);
 }

@@ -6,29 +6,102 @@ import { useConfettiFireworks } from "@/components/confetti/ConfettiFireworks";
 export default function ForensicsChallenge() {
   const [flag, setFlag] = useState("");
   const [status, setStatus] = useState<"idle" | "correct" | "wrong">("idle");
+  const [loading, setLoading] = useState(false);
+  const [alreadySolved, setAlreadySolved] = useState(false);
+  const [message, setMessage] = useState("");
+  const [challengeId, setChallengeId] = useState<number | null>(null);
+
   const { fire } = useConfettiFireworks();
 
-  const correctFlag = "CTF{hidden_metadata_found}"; // change later
+  // Fetch challenge from DB (by title or ID)
+  useEffect(() => {
+    async function fetchChallenge() {
+      const res = await fetch("/api/challenges/1");
+      if (!res.ok) return;
 
+      const data = await res.json();
+      setChallengeId(data.id);
+
+      if (data.alreadySolved) {
+        setAlreadySolved(true);
+        setStatus("correct");
+        setMessage("Flag already captured.");
+      }
+    }
+
+    fetchChallenge();
+  }, []);
+
+    useEffect(() => {
+    async function checkIfSolved() {
+      if (!challengeId) return;
+
+      const res = await fetch(
+        `/api/submissions/status/${challengeId}`,
+        { credentials: "include" }
+      );
+
+      if (!res.ok) return;
+
+      const data = await res.json();
+      if (data.solved) {
+        setAlreadySolved(true);
+      }
+    }
+
+    checkIfSolved();
+  }, [challengeId]);
+
+
+  // Fire confetti once
   useEffect(() => {
     if (status === "correct") {
       fire({ duration: 5000, particleCount: 100 });
     }
   }, [status, fire]);
 
-  const handleSubmit = () => {
-    if (flag.trim() === "cubbonpark_4") {
-      setStatus("correct");
-    } else {
-      setStatus("wrong");
-    }
-  };
+    const handleSubmit = async () => {
+  if (!challengeId) return;
+
+  setLoading(true);
+
+  const res = await fetch("/api/submissions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({
+      challengeId,
+      flag,
+    }),
+  });
+
+  const data = await res.json();
+  setLoading(false);
+
+  if (res.status === 409) {
+    setAlreadySolved(true);
+    setStatus("idle");
+    setMessage("Flag already captured.");
+    return;
+  }
+
+  if (res.ok && data.correct) {
+    setStatus("correct");
+    setAlreadySolved(true);
+    setMessage("Correct! Points awarded.");
+  } else {
+    setStatus("wrong");
+    setMessage("Incorrect flag.");
+  }
+};
+
+
 
   const handleDownload = async () => {
     try {
       const response = await fetch("/files/forensics1.zip");
       if (!response.ok) throw new Error("Download failed");
-      
+
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -40,14 +113,14 @@ export default function ForensicsChallenge() {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Error downloading file:", error);
-      alert("Failed to download file. Please try again.");
+      alert("Failed to download file.");
     }
   };
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
 
-      {/* Header Info */}
+      {/* Header */}
       <div>
         <h2 className="text-4xl font-bold text-red-500">
           Digital Footprint
@@ -55,7 +128,6 @@ export default function ForensicsChallenge() {
 
         <div className="flex gap-6 mt-3 text-sm text-zinc-400">
           <span>Category: Forensics</span>
-          
         </div>
       </div>
 
@@ -80,9 +152,9 @@ export default function ForensicsChallenge() {
         Establish context.
          <br />
         Reconstruct activity.
-<br />
+        <br />
         Correlate artifacts.
-<br />  
+        <br />  
         Draw defensible conclusions.
         <br /><br />
         All necessary evidence is contained within the provided files.
@@ -92,8 +164,8 @@ export default function ForensicsChallenge() {
           Flag format: <span className="text-red-400">CTF&#123;word_number&#125;</span>
         </p>
       </div>
-
-      {/* Download Section */}
+    
+      {/* Download */}
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
         <h3 className="text-lg font-semibold mb-4">Evidence</h3>
 
@@ -105,18 +177,7 @@ export default function ForensicsChallenge() {
         </button>
       </div>
 
-      {/* Hints */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-        <h3 className="text-lg font-semibold mb-4">Hints</h3>
-
-        <ul className="space-y-2 text-zinc-400 text-sm">
-          <li>• Check file metadata.</li>
-          <li>• Try common decoding tools.</li>
-          <li>• Don’t ignore file headers.</li>
-        </ul>
-      </div>
-
-      {/* Flag Submission */}
+      {/* Submit */}
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-4">
         <h3 className="text-lg font-semibold">Submit Flag</h3>
 
@@ -125,29 +186,29 @@ export default function ForensicsChallenge() {
           value={flag}
           onChange={(e) => setFlag(e.target.value)}
           placeholder="Enter flag..."
-          className="w-full bg-black border border-zinc-700 p-3 rounded-lg focus:outline-none focus:border-red-500"
+          disabled={alreadySolved}
+          className="w-full bg-black border border-zinc-700 p-3 rounded-lg focus:outline-none focus:border-red-500 disabled:opacity-50"
         />
 
         <button
           onClick={handleSubmit}
-          className="bg-red-600 hover:bg-red-700 px-6 py-2 rounded-lg transition"
+          disabled={alreadySolved || loading}
+          className="bg-red-600 hover:bg-red-700 px-6 py-2 rounded-lg transition disabled:opacity-50"
         >
-          Submit
+          {loading ? "Submitting..." : "Submit"}
         </button>
 
-        {status === "correct" && (
-          <p className="text-green-400 font-semibold">
-             YES, YOU FOUND IT. LESSGOO
+        {status !== "idle" && (
+          <p
+            className={`font-semibold ${
+              status === "correct" ? "text-green-400" : "text-red-400"
+            }`}
+          >
+            {message}
           </p>
         )}
 
-        {status === "wrong" && (
-          <p className="text-red-400 font-semibold">
-            NOPE NOT RIGHT, TRY AGAIN
-          </p>
-        )}
       </div>
-
     </div>
   );
 }

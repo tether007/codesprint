@@ -1,76 +1,102 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma"; // Uncomment when DB is available
+import { prisma } from "@/lib/prisma";
 import { verifyToken } from "@/lib/auth";
 import { cookies } from "next/headers";
 
-// Hardcoded flags for challenges
-const FLAGS: Record<string, string> = {
-  "crypto-1": "CTF{crypto_flag}",
-  "web-1": "CTF{web_flag}",
-  "misc-1": "CTF{misc_flag}",
-};
-
-// In-memory store for submissions (works without DB)
-const inMemorySubmissions: { userId: number; challengeId: string; isCorrect: boolean }[] = [];
-
-async function getAuthenticatedUserId(): Promise<number> {
+async function getUserId() {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
-  if (!token) throw new Error("Unauthorized");
+
+  if (!token) return null;
 
   const payload = await verifyToken(token);
-  if (!payload || typeof payload.userId !== "number") throw new Error("Invalid token");
+  if (!payload || typeof payload.userId !== "number") return null;
 
   return payload.userId;
 }
 
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
-    const userId = await getAuthenticatedUserId();
+    const userId = await getUserId();
+    if (!userId) {
+      return NextResponse.json(
+        { message: "Unauthorized" },
+        { status: 401 }
+      );
+    }
 
-    const body: unknown = await request.json().catch(() => null);
-    if (!body || typeof body !== "object" || !("challengeId" in body) || !("flag" in body))
-      return NextResponse.json({ message: "challengeId and flag are required" }, { status: 400 });
+    const body = await req.json();
+    const challengeId = Number(body.challengeId);
+    const flag = body.flag?.trim();
 
-    const challengeId = (body as { challengeId: string }).challengeId;
-    const submittedFlag = (body as { flag: string }).flag.trim();
+    if (!challengeId || !flag) {
+      return NextResponse.json(
+        { message: "challengeId and flag required" },
+        { status: 400 }
+      );
+    }
 
-    if (!FLAGS[challengeId]) return NextResponse.json({ message: "Invalid challenge" }, { status: 404 });
+    const challenge = await prisma.challenge.findUnique({
+      where: { id: challengeId },
+    });
 
-    // ----------------------------
-    // Hardcoded check (no DB)
-    const alreadySolved = inMemorySubmissions.find(
-      (s) => s.userId === userId && s.challengeId === challengeId && s.isCorrect
-    );
-    if (alreadySolved) return NextResponse.json({ correct: false, message: "Already solved." });
+    if (!challenge) {
+      return NextResponse.json(
+        { message: "Invalid challenge" },
+        { status: 404 }
+      );
+    }
 
-    const isCorrect = submittedFlag === FLAGS[challengeId];
+    const existingSubmission = await prisma.submission.findUnique({
+      where: {
+        userId_challengeId: {
+          userId,
+          challengeId,
+        },
+      },
+    });
 
-    // Save submission in memory
-    inMemorySubmissions.push({ userId, challengeId, isCorrect });
+    if (existingSubmission) {
+      return NextResponse.json(
+        { message: "Flag already captured." },
+        { status: 409 }
+      );
+    }
+
+    const isCorrect = flag === challenge.flag;
+
+    await prisma.$transaction(async (tx) => {
+      await tx.submission.create({
+        data: {
+          userId,
+          challengeId,
+          isCorrect,
+        },
+      });
+
+      if (isCorrect) {
+        await tx.user.update({
+          where: { id: userId },
+          data: {
+            score: {
+              increment: challenge.points,
+            },
+          },
+        });
+      }
+    });
 
     return NextResponse.json({
       correct: isCorrect,
       message: isCorrect ? "Correct flag!" : "Incorrect flag.",
+      pointsAwarded: isCorrect ? challenge.points : 0,
     });
 
-    // ----------------------------
-    // Uncomment after initialising Prisma DB
-    /*
-    const alreadySolvedDB = await prisma.submission.findFirst({
-      where: { userId, challengeId, isCorrect: true },
-    });
-    if (alreadySolvedDB) return NextResponse.json({ correct: false, message: "Already solved." });
-
-    if (submittedFlag !== FLAGS[challengeId])
-      return NextResponse.json({ correct: false, message: "Incorrect flag." });
-
-    await prisma.submission.create({ data: { userId, challengeId, isCorrect: true } });
-    return NextResponse.json({ correct: true, message: "Correct flag!" });
-    */
   } catch (error) {
     console.error("Submission error:", error);
-    return NextResponse.json({ message: "Unauthorized or server error" }, { status: 401 });
+    return NextResponse.json(
+      { message: "Server error" },
+      { status: 500 }
+    );
   }
 }
-
