@@ -47,6 +47,7 @@ export async function POST(req: Request) {
       );
     }
 
+    // Only check for existing submission if it was a correct one
     const existingSubmission = await prisma.submission.findUnique({
       where: {
         userId_challengeId: {
@@ -56,7 +57,7 @@ export async function POST(req: Request) {
       },
     });
 
-    if (existingSubmission) {
+    if (existingSubmission?.isCorrect) {
       return NextResponse.json(
         { message: "Flag already captured." },
         { status: 409 }
@@ -65,16 +66,30 @@ export async function POST(req: Request) {
 
     const isCorrect = flag === challenge.flag;
 
-    await prisma.$transaction(async (tx) => {
-      await tx.submission.create({
-        data: {
-          userId,
-          challengeId,
-          isCorrect,
-        },
-      });
+    console.log("Submitted:", JSON.stringify(flag));
+    console.log("DB flag:  ", JSON.stringify(challenge.flag));
+    console.log("Match:    ", isCorrect);
 
-      if (isCorrect) {
+    if (isCorrect) {
+      // Only persist to DB on a correct submission
+      await prisma.$transaction(async (tx) => {
+        await tx.submission.upsert({
+          where: {
+            userId_challengeId: {
+              userId,
+              challengeId,
+            },
+          },
+          create: {
+            userId,
+            challengeId,
+            isCorrect: true,
+          },
+          update: {
+            isCorrect: true,
+          },
+        });
+
         await tx.user.update({
           where: { id: userId },
           data: {
@@ -83,8 +98,8 @@ export async function POST(req: Request) {
             },
           },
         });
-      }
-    });
+      });
+    }
 
     return NextResponse.json({
       correct: isCorrect,

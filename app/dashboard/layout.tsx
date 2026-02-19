@@ -19,19 +19,19 @@ export default function DashboardLayout({
   ];
 
   useEffect(() => {
-    async function fetchScore() {
-      const res = await fetch("/api/user/score", {
-        credentials: "include",
-      });
+  async function fetchScore() {
+    const res = await fetch("/api/user/score", {
+      credentials: "include",
+    });
 
-      if (!res.ok) return;
+    if (!res.ok) return;
 
-      const data = await res.json();
-      setScore(data.score);
-    }
+    const data = await res.json();
+    setScore(data.score);
+  }
 
-    fetchScore();
-  }, []);
+  fetchScore();
+}, [pathname]); 
 
   return (
     <div className="min-h-screen bg-black text-white">
