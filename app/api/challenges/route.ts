@@ -1,21 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export async function GET(
-  _req: Request,
-  { params }: { params: { id: string } }
-) {
-  const challengeId = Number(params.id);
-
-  if (isNaN(challengeId)) {
-    return NextResponse.json(
-      { message: "Invalid challenge id" },
-      { status: 400 }
-    );
-  }
-
-  const challenge = await prisma.challenge.findUnique({
-    where: { id: challengeId },
+export async function GET(request: NextRequest) {
+  const challenges = await prisma.challenge.findMany({
     select: {
       id: true,
       title: true,
@@ -25,12 +12,5 @@ export async function GET(
     },
   });
 
-  if (!challenge) {
-    return NextResponse.json(
-      { message: "Challenge not found" },
-      { status: 404 }
-    );
-  }
-
-  return NextResponse.json(challenge);
+  return NextResponse.json(challenges);
 }

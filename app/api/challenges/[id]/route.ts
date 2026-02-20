@@ -1,14 +1,15 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(
-  _req: Request,
+  request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params;
+
   const challengeId = Number(id);
 
-  if (!challengeId || isNaN(challengeId)) {
+  if (isNaN(challengeId)) {
     return NextResponse.json(
       { message: "Invalid challenge id" },
       { status: 400 }
