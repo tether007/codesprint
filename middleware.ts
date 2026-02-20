@@ -7,7 +7,7 @@ import { verifyToken } from "@/lib/auth";
 
 // User can ONLY access /dashboard and challenge pages
 
-export async function proxy(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const url = req.nextUrl.clone();
   const path = url.pathname;
 
@@ -16,7 +16,7 @@ export async function proxy(req: NextRequest) {
 
   const introSolved = req.cookies.get("introSolved")?.value;
   const token = req.cookies.get("token")?.value;
-
+  console.log("TOKEN:", token);
   let payload = null;
 
   if (token) {
