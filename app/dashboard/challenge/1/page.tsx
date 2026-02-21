@@ -96,14 +96,14 @@ export default function ForensicsChallenge() {
 
   const handleDownload = async () => {
     try {
-      const response = await fetch("/files/forensics1.zip");
+      const response = await fetch("/files/CTF_forensics.zip");
       if (!response.ok) throw new Error("Download failed");
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = "forensics1.zip";
+      link.download = "CTF_forensics.zip";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -154,7 +154,7 @@ export default function ForensicsChallenge() {
           <br /><br />
           Submit the flag in the format:
           <br />
-          <span className="text-red-500 font-bold">CTF{"{word_digit}"}</span>
+          <span className="text-red-500 font-bold">CTF{"{place_digit}"}</span>
         </p>
       </div>
 
@@ -179,8 +179,8 @@ export default function ForensicsChallenge() {
         </h3>
 
         <ul className="space-y-3 text-zinc-400 text-sm">
-          <li>• Examine metadata thoroughly.</li>
-          <li>• Verify file headers.</li>
+          <li>• Deleted does not mean gone.</li>
+          <li>• Applications remember more than users do.</li>
           <li>• Consider decoding artifacts.</li>
         </ul>
       </div>

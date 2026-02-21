@@ -9,15 +9,15 @@ export default function DashboardHome() {
   },
   {
     id: 2,
-    title: "Web Exploitation",
+    title: "Built Once",
     description:
       "Explore the surface. Then go deeper. Break assumptions, identify vulnerabilities, and uncover the hidden flag.",
   },
   {
     id: 3,
-    title: "Final Sprint",
+    title: "When History Was Made",
     description:
-      "Precision. Speed. Strategy. This final challenge will push your limits. One insight could win everything.",
+      "All fragments converge here. Decode the pattern, apply logic, and reveal the final truth",
   },
 ];
 
