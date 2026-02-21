@@ -9,7 +9,8 @@ export default function AuthPage() {
   const [form, setForm] = useState({
   name: "",
   email: "",
-  password: ""
+  password: "",
+  team: ""
   });
   const [error, setError] = useState("");
   const router = useRouter();
@@ -40,6 +41,10 @@ export default function AuthPage() {
   if (form.password.length < 8) {
     setError("SECURE_KEY_TOO_SHORT_MIN_8");
     return;
+  }
+  if (!isLogin && !form.team.trim()) {
+  setError("TEAM_IDENTIFIER_REQUIRED");
+  return;
   }
   const endpoint = isLogin
     ? "/api/auth/login"
@@ -219,8 +224,8 @@ export default function AuthPage() {
               type="Team_Name"
               placeholder="[ TEAM_NAME ]"
               style={inputStyle}
-              //value={form.teamName}
-              //onChange={(e) => setForm({ ...form, teamName: e.target.value })}
+              value={form.team}
+              onChange={(e) => setForm({ ...form, team: e.target.value })}
               {...inputAnimate}
             />
             )}

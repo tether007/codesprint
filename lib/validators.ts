@@ -7,6 +7,7 @@ export const signupSchema = z.object({
   email: z.email('Invalid email address'),
   name: z.string().min(2, 'Name must be at least 2 characters').max(100),
   password: z.string().min(8, 'Password must be at least 8 characters').max(100),
+  team: z.string().min(2,'Team name must be atleast 2 chars')
 });
 
 // Login validation

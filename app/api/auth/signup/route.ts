@@ -16,15 +16,31 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const {email, name, password} = validation.data;
+    const { email, name, password, team } = validation.data;
 
+    // Normalize team to uppercase
+    const normalizedTeam = team.trim().toUpperCase();
+
+    // Check existing email
     const existUser = await prisma.user.findUnique({
-      where: {email},
+      where: { email },
     });
 
     if (existUser) {
       return NextResponse.json(
         { error: 'User exists with same mail id' },
+        { status: 409 }
+      );
+    }
+
+    // Check existing team
+    const existTeam = await prisma.user.findUnique({
+      where: { team: normalizedTeam },
+    });
+
+    if (existTeam) {
+      return NextResponse.json(
+        { error: 'Team name already registered' },
         { status: 409 }
       );
     }
@@ -35,31 +51,34 @@ export async function POST(req: NextRequest) {
       data: {
         email,
         name,
+        team: normalizedTeam,
         passwordHash,
       },
       select: {
         id: true,
         email: true,
         name: true,
+        team: true,
         createdAt: true,
       },
     });
-    
+
     const token = await createToken(user.id);
+
     const response = NextResponse.json({
-      success: true,  
+      success: true,
       user,
     });
+
     response.cookies.set({
       name: "token",
       value: token,
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7, 
+      maxAge: 60 * 60 * 24 * 7,
       path: "/",
     });
-
 
     return response;
 

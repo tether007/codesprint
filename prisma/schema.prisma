@@ -11,6 +11,7 @@ model User {
   id           Int          @id @default(autoincrement())
   email        String       @unique
   name         String
+  team         String?       @unique
   passwordHash String       @map("password_hash")
   score        Int          @default(0)
   createdAt    DateTime     @default(now()) @map("created_at")
