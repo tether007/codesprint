@@ -6,21 +6,86 @@ import { useConfettiFireworks } from "@/components/confetti/ConfettiFireworks";
 export default function FinalChallenge() {
   const [flag, setFlag] = useState("");
   const [status, setStatus] = useState<"idle" | "correct" | "wrong">("idle");
+  const [loading, setLoading] = useState(false);
+  const [alreadySolved, setAlreadySolved] = useState(false);
+  const [message, setMessage] = useState("");
+  const [challengeId, setChallengeId] = useState<number | null>(null);
+
   const { fire } = useConfettiFireworks();
 
-  const correctFlag = "CTF{25-10-2021}"; // change if needed
+  // From DB 
+  useEffect(() => {
+    async function fetchChallenge() {
+      const res = await fetch("/api/challenges/3");
+      if (!res.ok) return;
 
+      const data = await res.json();
+      setChallengeId(data.id);
+    }
+
+    fetchChallenge();
+  }, []);
+
+
+  useEffect(() => {
+    async function checkIfSolved() {
+      if (!challengeId) return;
+
+      const res = await fetch(
+        `/api/submissions/status/${challengeId}`,
+        { credentials: "include" }
+      );
+
+      if (!res.ok) return;
+
+      const data = await res.json();
+      if (data.solved) {
+        setAlreadySolved(true);
+      }
+    }
+
+    checkIfSolved();
+  }, [challengeId]);
+
+  
   useEffect(() => {
     if (status === "correct") {
       fire({ duration: 5000, particleCount: 120 });
     }
   }, [status, fire]);
 
-  const handleSubmit = () => {
-    if (flag.trim() === correctFlag) {
+  const handleSubmit = async () => {
+    if (!challengeId) return;
+
+    setLoading(true);
+
+    const res = await fetch("/api/submissions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        challengeId,
+        flag,
+      }),
+    });
+
+    const data = await res.json();
+    setLoading(false);
+
+    if (res.status === 409) {
+      setAlreadySolved(true);
+      setStatus("idle");
+      setMessage("Flag already captured.");
+      return;
+    }
+
+    if (res.ok && data.correct) {
       setStatus("correct");
+      setAlreadySolved(true);
+      setMessage("Discovery Confirmed. Points awarded.");
     } else {
       setStatus("wrong");
+      setMessage("Incorrect Date — Reevaluate the Records.");
     }
   };
 
@@ -32,7 +97,6 @@ export default function FinalChallenge() {
         <h2 className="text-5xl font-extrabold uppercase tracking-wider text-red-500">
           When History Was Made
         </h2>
-
         <div className="flex gap-6 mt-4 text-sm text-zinc-500 uppercase tracking-widest">
           <span>Category: Final Challenge</span>
         </div>
@@ -51,78 +115,37 @@ export default function FinalChallenge() {
         </h3>
 
         <div className="text-zinc-400 text-sm space-y-6 leading-relaxed">
-            <div>
-                <p>
-                Dr. Elena Marsh vanished after claiming she had made a historic discovery.
-                Before disappearing, she left behind a final puzzle.
-                </p>
-            </div>
+          <p>
+            Dr. Elena Marsh vanished after claiming she had made a historic discovery.
+            Before disappearing, she left behind a final puzzle.
+          </p>
 
-            <div>
-                <p>
-                She believed that only those who could think like the ancients — 
-                through symbols, stars, numbers, and hidden fragments — 
-                would uncover the exact date of her discovery.
-                </p>
-                <p className="mt-2">
-                The date is not written anywhere directly.
-                </p>
-            </div>
+          <p>
+            The exact date of her discovery is hidden across artifacts,
+            celestial references, ancient numbering systems, and encrypted fragments.
+          </p>
 
-            <div>
-                <p>
-                It has been divided into parts and concealed across artifacts,
-                source code, metadata, and encrypted files.
-                </p>
-                <p className="mt-2">
-                Every detail matters. Images may hide more than pixels.
-                Comments may reveal more than text.
-                Clues may confirm each other.
-                </p>
-            </div>
+          <p>
+            Images may hide more than pixels.
+            Comments may reveal more than text.
+            Files may contain more than what they show.
+          </p>
 
-            <div>
-                <h3 className="text-white font-semibold text-base mb-2">
-                Your Objective
-                </h3>
-                <p>
-                Recover the FLAG in <span className="text-red-500 font-bold">CTF{"{DD-MM-YYYY}"}</span> format.
-                </p>
-            </div>
-
-            <div>
-                <h3 className="text-white font-semibold text-base mb-2">
-                To Succeed, You Must
-                </h3>
-                <ul className="list-disc list-inside space-y-1">
-                <li>Interpret ancient numbering systems</li>
-                <li>Decode celestial references</li>
-                <li>Solve mathematical constructions</li>
-                <li>Reconstruct a fragmented password</li>
-                <li>Extract hidden evidence</li>
-                </ul>
-            </div>
-
-            <div>
-                <p>
-                Search thoroughly. Think logically. Verify every assumption.
-                </p>
-                <p className="mt-2 font-medium text-white">
-                The truth is there — but only for those patient enough to assemble it.
-                </p>
-            </div>
-
-            </div>
+          <p className="text-white font-semibold">
+            Recover the FLAG in format:
+            <span className="text-red-500 font-bold"> CTF{"{DD-MM-YYYY}"}</span>
+          </p>
+        </div>
       </div>
 
-      {/* WEBSITE LINK SECTION */}
+      {/* ARCHIVE LINK */}
       <div className="bg-black border border-zinc-800 p-6 hover:border-red-600 transition-all duration-300">
         <h3 className="text-lg font-bold text-red-500 uppercase tracking-wider mb-4">
           Archive Access
         </h3>
 
         <a
-          href="https://your-marsh-ctf-link.com"
+          href="https://tether007.github.io/challenge_3/"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-block px-8 py-3 bg-red-600 text-black font-bold uppercase tracking-widest transition-all duration-300 hover:bg-white hover:text-red-600"
@@ -148,27 +171,27 @@ export default function FinalChallenge() {
           value={flag}
           onChange={(e) => setFlag(e.target.value)}
           placeholder="CTF{...}"
+          disabled={alreadySolved}
           className="w-full bg-black border border-zinc-700 p-4 text-white
-          focus:outline-none focus:border-red-500 transition-all duration-300"
+          focus:outline-none focus:border-red-500 transition-all duration-300 disabled:opacity-50"
         />
 
         <button
           onClick={handleSubmit}
+          disabled={alreadySolved || loading}
           className="mt-6 w-full py-3 bg-red-600 text-black font-black uppercase tracking-widest
-          transition-all duration-300 hover:bg-white hover:text-red-600"
+          transition-all duration-300 hover:bg-white hover:text-red-600 disabled:opacity-50"
         >
-          Submit →
+          {loading ? "Submitting..." : "Submit →"}
         </button>
 
-        {status === "correct" && (
-          <p className="text-red-500 font-bold mt-4 uppercase tracking-wider">
-            ✔ Discovery Confirmed
-          </p>
-        )}
-
-        {status === "wrong" && (
-          <p className="text-zinc-400 font-bold mt-4 uppercase tracking-wider">
-            ✖ Incorrect Date — Reevaluate the Records
+        {status !== "idle" && (
+          <p
+            className={`mt-4 font-bold uppercase tracking-wider ${
+              status === "correct" ? "text-red-500" : "text-zinc-400"
+            }`}
+          >
+            {message}
           </p>
         )}
       </div>
