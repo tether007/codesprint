@@ -218,13 +218,13 @@ export default function ForensicsChallenge() {
 
         {status === "correct" && (
           <p className="text-red-500 font-bold mt-4 uppercase tracking-wider">
-            ✔ Flag Verified — {message}
+             Flag Verified — {message}
           </p>
         )}
 
         {status === "wrong" && (
           <p className="text-zinc-400 font-bold mt-4 uppercase tracking-wider">
-            ✖ Incorrect Flag — Reassess Evidence
+             Incorrect Flag — dig deeper
           </p>
         )}
       </div>

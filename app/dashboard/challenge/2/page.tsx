@@ -234,13 +234,13 @@ export default function WebPuzzleChallenge() {
 
         {status === "correct" && (
           <p className="text-red-500 font-bold mt-4 uppercase tracking-wider">
-            ✔ Flag Verified — {message}
+             Flag Verified — {message}
           </p>
         )}
 
         {status === "wrong" && (
           <p className="text-zinc-400 font-bold mt-4 uppercase tracking-wider">
-            ✖ Incorrect Flag — Check build
+             Incorrect Flag — think harder
           </p>
         )}
       </div>
